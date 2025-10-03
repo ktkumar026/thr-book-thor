@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <sentient>Sentient — Gaming Quiz (10 Questions)</sentient>
+  <style>
+    :root{ --bg:#0a0512; --panel:#111217; --accent:#ff4dd2; --accent-2:#ff88d1; --glass: rgba(255,255,255,0.03); --muted:#9aa6b2; --radius:14px; --pad:16px; font-family: Inter, system-ui, Roboto, Arial; }
+    html,body{height:100%;margin:0;background:radial-gradient(800px 400px at 10% 10%, rgba(255,77,210,0.06), transparent),var(--bg);color:#f4eef8}
+    .wrap{max-width:980px;margin:36px auto;padding:18px;display:grid;grid-template-columns:1fr 320px;gap:18px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:var(--pad);border-radius:var(--radius);box-shadow:0 10px 30px rgba(0,0,0,0.6)}
+    header{display:flex;gap:12px;align-items:center}
+    .logo{width:58px;height:58px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;font-weight:800;color:#210018}
+    h1{margin:0;font-size:20px}
+    .lead{margin:6px 0 0;color:var(--muted);font-size:13px}
+    .question{margin-top:16px;font-size:18px;min-height:64px}
+    .choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+    .choice{padding:12px;border-radius:12px;background:rgba(255,255,255,0.02);cursor:pointer;border:1px solid rgba(255,255,255,0.03);user-select:none}
+    .choice:hover{transform:translateY(-4px)}
+    .choice.correct{outline:3px solid rgba(255,77,210,0.12)}
+    .choice.wrong{opacity:0.85;outline:3px solid rgba(255,107,107,0.08)}
+    .meta{display:flex;align-items:center;justify-content:space-between;margin-top:16px}
+    .timer .circle{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);font-weight:700}
+    .btn{padding:10px 14px;border-radius:12px;border:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#210018;font-weight:700;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);font-weight:600}
+    .stat{display:flex;justify-content:space-between;padding:12px;border-radius:12px;background:rgba(255,255,255,0.01);margin-bottom:12px}
+    footer.small{margin-top:12px;color:var(--muted);font-size:13px}
+    @media (max-width:900px){.wrap{grid-template-columns:1fr;padding:12px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <main class="card">
+      <header>
+        <div class="logo">S</div>
+        <div>
+          <h1>Sentient — Gaming Quiz</h1>
+          <div class="lead">10 questions • 4 options each • Timer-based • Have fun!</div>
+        </div>
+      </header>
+
+      <div class="question-area">
+        <div class="question" id="question">Loading question...</div>
+        <div class="choices" id="choices"></div>
+        <div class="meta">
+          <div class="timer">
+            <div class="small">Time left</div>
+            <div class="circle" id="timer">15</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn ghost" id="skip">Skip (-1)</button>
+            <button class="btn" id="next" style="display:none">Next</button>
+          </div>
+        </div>
+      </div>
+
+      <footer class="small">Keyboard: 1–4 to answer, S to skip, R to restart. Answers are stored in the code for easy editing.</footer>
+    </main>
+
+    <aside class="card">
+      <div class="stat"><div><div class="small">Score</div><div id="score" style="font-size:26px">0</div></div><div style="text-align:right"><div class="small">Round</div><div id="round">0 / 10</div></div></div>
+      <div class="stat"><div><div class="small">Streak</div><div id="streak">0</div></div></div>
+      <div class="stat"><div><div class="small">Accuracy</div><div id="accuracy">0%</div></div></div>
+      <div style="display:flex;gap:8px;margin-top:12px"><button class="btn" id="restart">Restart</button><button class="btn ghost" id="share">Share</button></div>
+      <div style="margin-top:12px;font-size:12px;color:var(--muted)">To edit questions, update the QUESTIONS array in the script section below.</div>
+    </aside>
+  </div>
+
+  <script>
+    const TOTAL = 10;
+    const TIME_PER = 15;
+
+    // === QUESTIONS ===
+    // Each object: q = question, opts = 4 options, a = index of correct option (0-3)
+    const QUESTIONS = [
+      { q: "What is the core mission of Sentient according to its “What is Sentient” blog?", opts: ["Nevermore Studios","Aurora Games","Ironforge","Nebula Interactive"], a: 1 },
+      { q: "What is “The GRID” in Sentient’s architecture?", opts: ["Damage Per Second","Double Player Spawn","Dynamic Push System","Direct Player Sync"], a: 0 },
+      { q: "How does Sentient plan to fund open-source AI development?", opts: ["Mana Shard","Health Potion","Teleport Rune","Experience Orb"], a: 1 },
+      { q: "What is the “Builder Program” of Sentient Labs?", opts: ["No-scope","Pacifist","No-hit","Speedrun"], a: 2 },
+      { q: "Which of the following is part of Sentient’s “Builder Suite”?", opts: ["PlayStation","Mobile-only","Sega Dreamcast","Nintendo DS"], a: 0 },
+      { q: "Which of these is listed among Sentient’s ecosystem or partner organizations?", opts: ["Real-time Puzzle Game","Role-Playing Game","Random Player Generator","Race Performance Grade"], a: 1 },
+      { q: "In Sentient’s Terms of Use, what must users connect to utilize certain services?", opts: ["BO3 (Best of 3)","Solo Speedrun","Open Sandbox","Single-player Campaign"], a: 0 },
+      { q: "What is a key requirement for developers participating in the Builder Program?", opts: ["Hidden enemy info","Weather effects","Unit morale","Resource scarcity"], a: 0 },
+      { q: "Which year was Sentient’s Privacy Policy “Last Updated” (version 2.0)?", opts: ["Photorealism","Pixel art","Ray tracing","Vector art"], a: 1 },
+      { q: "What does Sentient not intentionally collect, unless the user provides it?", opts: ["Fortnite","Tetris","Civilization VI","SimCity"], a: 0 }
+    ];
+
+    // === STATE ===
+    let pool = [];
+    let idx = 0;
+    let score = 0;
+    let streak = 0;
+    let correct = 0;
+    let timer = null;
+    let timeLeft = TIME_PER;
+    let skips = 0;
+
+    // DOM
+    const qEl = document.getElementById('question');
+    const choicesEl = document.getElementById('choices');
+    const timerEl = document.getElementById('timer');
+    const scoreEl = document.getElementById('score');
+    const roundEl = document.getElementById('round');
+    const streakEl = document.getElementById('streak');
+    const accuracyEl = document.getElementById('accuracy');
+    const skipBtn = document.getElementById('skip');
+    const restartBtn = document.getElementById('restart');
+    const shareBtn = document.getElementById('share');
+
+    function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]] } return a }
+
+    function start(){ pool = shuffle(QUESTIONS.slice()).slice(0,TOTAL); idx=0; score=0; streak=0; correct=0; skips=0; updateHUD(); showQ(); }
+
+    function showQ(){ clearInterval(timer); const item = pool[idx]; qEl.textContent = item.q; choicesEl.innerHTML=''; const opts = item.opts.map((t,i)=>({t,i})); shuffle(opts).forEach((o,i)=>{
+      const d = document.createElement('div'); d.className='choice'; d.dataset.idx = o.i; d.innerHTML = `<strong>${i+1}.</strong> <span style='margin-left:8px'>${o.t}</span>`; d.addEventListener('click', ()=>select(d, item, o.i)); choicesEl.appendChild(d);
+    }); timeLeft = TIME_PER; timerEl.textContent = timeLeft; timer = setInterval(()=>{ timeLeft--; timerEl.textContent = timeLeft; if(timeLeft<=0){ clearInterval(timer); timeout(); } },1000); roundEl.textContent = `${idx+1} / ${TOTAL}`; }
+
+    function select(el, item, chosen){ clearInterval(timer); const all = Array.from(document.querySelectorAll('.choice')); all.forEach(c=>c.style.pointerEvents='none'); if(chosen===item.a){ el.classList.add('correct'); streak++; correct++; const pts = 100 + Math.max(0, timeLeft*5) + (streak-1)*10; score += pts; scoreEl.textContent = score; } else { el.classList.add('wrong'); streak=0; const correctBtn = all.find(c=>Number(c.dataset.idx)===item.a); if(correctBtn) correctBtn.classList.add('correct'); }
+      setTimeout(()=>{ idx++; if(idx>=TOTAL) end(); else showQ(); updateHUD(); },800);
+    }
+
+    function timeout(){ const all = Array.from(document.querySelectorAll('.choice')); all.forEach(c=>c.style.pointerEvents='none'); streak=0; const item = pool[idx]; const correctBtn = all.find(c=>Number(c.dataset.idx)===item.a); if(correctBtn) correctBtn.classList.add('correct'); setTimeout(()=>{ idx++; if(idx>=TOTAL) end(); else showQ(); updateHUD(); },900); }
+
+    function skip(){ if(skips>=2) return alert('Max 2 skips allowed'); if(!confirm('Use a skip?')) return; skips++; idx++; if(idx>=TOTAL) end(); else showQ(); updateHUD(); }
+    skipBtn.addEventListener('click', skip);
+    restartBtn.addEventListener('click', ()=>{ if(confirm('Restart quiz?')) start(); });
+    shareBtn.addEventListener('click', ()=>{ const text = `I scored ${score} in Sentient Quiz!`; if(navigator.share) navigator.share({title:'Sentient Quiz', text}); else prompt('Copy to share', text); });
+
+    function updateHUD(){ scoreEl.textContent = score; streakEl.textContent = streak; const acc = idx===0? Math.round((correct/1)*100) : Math.round((correct/idx)*100); accuracyEl.textContent = isFinite(acc)? acc + '%':'0%'; }
+
+    function end(){ clearInterval(timer); updateHUD(); const acc = Math.round((correct/TOTAL)*100); alert(`Sentient — Results:
+Score: ${score}
+Accuracy: ${acc}%
+Correct: ${correct} / ${TOTAL}`); }
+
+    // keyboard
+    window.addEventListener('keydown',(e)=>{ if(e.key>='1' && e.key<='4'){ const i=Number(e.key)-1; const btn = choicesEl.children[i]; if(btn) btn.click(); } if(e.key.toLowerCase()==='s') skip(); if(e.key.toLowerCase()==='r') start(); });
+
+    // start
+    start();
+  </script>
+</body>
+</html>
